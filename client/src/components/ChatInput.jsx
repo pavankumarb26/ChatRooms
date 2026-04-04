@@ -59,7 +59,7 @@ export default function ChatInput({
   };
 
 return (
-  <div className="w-[420px] mx-auto mt-3">
+  <div className="w-full max-w-full">
 
     {/* Message Form */}
     <form
@@ -111,11 +111,9 @@ return (
       </label>
     </div>
 
-    {/* Hint */}
-    <p className="text-xs text-gray-400 mt-1">
-      Tip: Ctrl+Enter to send multiline text
+    <p className="mt-2 text-center text-[11px] text-slate-400 sm:text-left">
+      Tip: Ctrl+Enter to send · optional caption when attaching a file
     </p>
-
   </div>
 );
 }

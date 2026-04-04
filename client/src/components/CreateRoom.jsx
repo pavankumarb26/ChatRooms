@@ -43,8 +43,8 @@ export default function CreateRoom({ onRoomJoined, onBack }) {
 
 return (
   
-  <div className="h-screen grid place-items-center bg-gray-100">
-    <div className="w-[420px] bg-white p-7 rounded-2xl shadow-lg">
+  <div className="flex flex-1 flex-col items-center justify-center px-4 py-10 sm:py-12">
+    <div className="w-full max-w-md rounded-2xl border border-slate-200/90 bg-white p-7 shadow-xl shadow-slate-200/50 ring-1 ring-slate-200/60">
       
       {/* Back Button */}
       <button 

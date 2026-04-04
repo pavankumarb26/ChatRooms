@@ -10,14 +10,7 @@ scroll-behavior: smooth;
 }
 
 body {
-font-family:  'Open Sans', sans-serif;
-/* display: Glex;
-Glex-dinection: column;
-justify-content: center;
-align-items: centen; */
-display: grid;
-place-items: center;
-background-color:#ebebeb;
+  font-family: "Open Sans", sans-serif;
 }
 
 .title{
@@ -54,15 +47,17 @@ outline: none;
 background-color:#ebebeb;
 }
 
-.message-container{
-display: flex;
-flex-direction: column;
-background-color:#f6f6f6;
-width: 400px;
-height: 500px;
-overflow-y: scroll;
-overflow-x: hidden;
-
+.message-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  min-height: 120px;
+  overflow-x: hidden;
+  background-color: #f3f4f6;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding-bottom: 8px;
 }
  
 .message-left,
@@ -102,7 +97,8 @@ word-wrap: break-word;
     display: flex;
     gap: 8px;
     align-items: flex-end;
-    width: 400px;
+    width: 100%;
+    max-width: 100%;
     background: #fff;
     border: 1px solid #dedede;
     border-radius: 10px;
@@ -267,7 +263,8 @@ word-wrap: break-word;
 }
 
 .file-upload-row {
-    width: 400px;
+    width: 100%;
+    max-width: 100%;
     margin-top: 10px;
     position: relative;
 }
@@ -299,7 +296,8 @@ word-wrap: break-word;
 }
 
 .chat-input-wrap {
-    width: 400px;
+    width: 100%;
+    max-width: 100%;
 }
 
 .input-hint {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Home from "./pages/Home.jsx";
 import Chat from "./components/Chat.jsx";
+import AppLayout from "./components/AppLayout.jsx";
 import socket, { parseRoomJoined } from "./socket";
 
 const SESSION_KEY = "chat_websocket_session";
@@ -93,31 +94,30 @@ export default function App() {
     };
   }, []);
 
-  if (restoring) {
-    return (
-      <div style={{ padding: 24 }}>
-        <p>Restoring your chat…</p>
-      </div>
-    );
-  }
-
-  if (!room) {
-    return <Home onRoomJoined={handleRoomJoined} />;
-  }
-
   return (
-    <Chat
-      key={room}
-      room={room}
-      name={name}
-      initialMessages={initialMessages}
-      onLeave={() => {
-        socket.emit("leave-room", { password: room });
-        clearSession();
-        setRoom(null);
-        setName("");
-        setInitialMessages([]);
-      }}
-    />
+    <AppLayout>
+      {restoring ? (
+        <div className="flex flex-1 flex-col items-center justify-center px-4 py-16">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-slate-800" />
+          <p className="mt-4 text-sm text-slate-600">Restoring your chat…</p>
+        </div>
+      ) : !room ? (
+        <Home onRoomJoined={handleRoomJoined} />
+      ) : (
+        <Chat
+          key={room}
+          room={room}
+          name={name}
+          initialMessages={initialMessages}
+          onLeave={() => {
+            socket.emit("leave-room", { password: room });
+            clearSession();
+            setRoom(null);
+            setName("");
+            setInitialMessages([]);
+          }}
+        />
+      )}
+    </AppLayout>
   );
 }

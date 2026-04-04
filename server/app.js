@@ -123,14 +123,22 @@ app.get("/api/files/:documentId", async (req, res) => {
 });
 
 let socketsConnected = new Set();
-const users = {}; // store name + room per socket
+/** Fallback map for legacy paths; presence uses Socket.IO rooms + socket.data.displayName */
+const users = {};
 
-function emitRoomUsers(room) {
-  const roomUsers = Object.values(users)
-    .filter((u) => u.room === room)
-    .map((u) => ({ name: u.name }));
-
-  io.to(room).emit("active-users", roomUsers);
+/** Broadcast everyone actually in the Socket.IO room (source of truth). */
+async function emitRoomUsers(room) {
+  const clean = String(room || "").trim().toLowerCase();
+  if (!clean) return;
+  try {
+    const sockets = await io.in(clean).fetchSockets();
+    const roomUsers = sockets.map((s) => ({
+      name: s.data.displayName || "Anonymous",
+    }));
+    io.to(clean).emit("active-users", roomUsers);
+  } catch (err) {
+    console.log("emitRoomUsers:", err);
+  }
 }
 
 io.on("connection", (socket) => {
@@ -138,30 +146,38 @@ io.on("connection", (socket) => {
   socketsConnected.add(socket.id);
   io.emit("clients-total", socketsConnected.size);
 
-socket.on("disconnect", () => {
-  console.log("User disconnected:", socket.id);
+  socket.on("disconnect", async () => {
+    console.log("User disconnected:", socket.id);
 
-  const user = users[socket.id];
+    const roomsToRefresh = [...socket.rooms].filter((r) => r !== socket.id);
 
-  socketsConnected.delete(socket.id);
-  delete users[socket.id];
+    socketsConnected.delete(socket.id);
+    delete users[socket.id];
+    delete socket.data.displayName;
 
-  io.emit("clients-total", socketsConnected.size);
+    io.emit("clients-total", socketsConnected.size);
 
-  if (user?.room) {
-    emitRoomUsers(user.room);
-  }
-});
+    for (const r of roomsToRefresh) {
+      await emitRoomUsers(r);
+    }
+  });
 
-socket.on("leave-room", ({ password }) => {
-  const cleanPass = password?.trim().toLowerCase();
-  if (!cleanPass) return;
+  socket.on("leave-room", async ({ password }) => {
+    const cleanPass = password?.trim().toLowerCase();
+    if (!cleanPass) return;
 
-  socket.leave(cleanPass);
-  delete users[socket.id];
+    socket.leave(cleanPass);
+    delete users[socket.id];
+    delete socket.data.displayName;
 
-  emitRoomUsers(cleanPass);
-});
+    await emitRoomUsers(cleanPass);
+  });
+
+  socket.on("request-active-users", async ({ password }) => {
+    const cleanPass = password?.trim().toLowerCase();
+    if (!cleanPass || !socket.rooms.has(cleanPass)) return;
+    await emitRoomUsers(cleanPass);
+  });
 
   socket.on("create-room", async ({ password }) => {
     try {
@@ -199,10 +215,16 @@ socket.on("leave-room", ({ password }) => {
         return;
       }
 
-      users[socket.id] = { name: name?.trim() || "Anonymous", room: cleanPass };
+      const displayName = name?.trim() || "Anonymous";
+      socket.data.displayName = displayName;
+      users[socket.id] = { name: displayName, room: cleanPass };
+
+      for (const r of [...socket.rooms]) {
+        if (r !== socket.id) socket.leave(r);
+      }
 
       socket.join(cleanPass);
-      emitRoomUsers(cleanPass);
+      await emitRoomUsers(cleanPass);
       const messagesRaw = await Message.find({ roomId: cleanPass })
         .sort({ dateTime: 1 })
         .populate("documentId", "fileName mimeType fileSize")
@@ -229,11 +251,16 @@ socket.on("leave-room", ({ password }) => {
   socket.on("message", async ({ password, message }) => {
     try {
       const cleanPass = password?.trim().toLowerCase();
-      const name = users[socket.id]?.name;
+      const senderName =
+        socket.data.displayName || users[socket.id]?.name;
 
       if (!cleanPass || message == null || String(message).trim() === "") return;
-      if (!name) {
+      if (!senderName) {
         socket.emit("error-message", "User not identified. Please rejoin.");
+        return;
+      }
+      if (!socket.rooms.has(cleanPass)) {
+        socket.emit("error-message", "Join the room before sending messages.");
         return;
       }
 
@@ -242,7 +269,7 @@ socket.on("leave-room", ({ password }) => {
 
       const newMessage = await Message.create({
         roomId: cleanPass,
-        name,
+        name: senderName,
         message: text,
         kind: "text",
       });
@@ -263,8 +290,16 @@ socket.on("leave-room", ({ password }) => {
   socket.on("delete-message", async ({ password, messageId }) => {
     try {
       const cleanPass = password?.trim().toLowerCase();
-      const requester = users[socket.id]?.name?.trim();
+      const requester = (
+        socket.data.displayName ||
+        users[socket.id]?.name ||
+        ""
+      ).trim();
       if (!cleanPass || !messageId || !requester) return;
+      if (!socket.rooms.has(cleanPass)) {
+        socket.emit("delete-failed", "Join the room first.");
+        return;
+      }
 
       const msg = await Message.findById(messageId);
       if (!msg || msg.roomId !== cleanPass) {

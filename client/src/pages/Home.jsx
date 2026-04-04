@@ -18,9 +18,8 @@ export default function Home({ onRoomJoined }) {
   }
 
 return (
-  <div className="h-screen grid place-items-center bg-gray-100">
-    
-    <div className="w-[420px] bg-white p-8 rounded-2xl shadow-lg text-center">
+  <div className="flex flex-1 flex-col items-center justify-center px-4 py-10 sm:py-12">
+    <div className="w-full max-w-md rounded-2xl border border-slate-200/90 bg-white p-8 text-center shadow-xl shadow-slate-200/50 ring-1 ring-slate-200/60">
 
       {/* Header */}
       <div className="mb-6">
@@ -61,11 +60,9 @@ return (
         <span className="text-lg">→</span>
       </div>
 
-      {/* Footer */}
-      <p className="text-xs text-gray-400 mt-6">
-        🔒 End-to-end encrypted
+      <p className="mt-6 text-xs text-slate-400">
+        Rooms are private to those who know the password
       </p>
-
     </div>
   </div>
 );
