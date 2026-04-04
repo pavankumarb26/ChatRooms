@@ -1,6 +1,33 @@
 import { forwardRef, useRef, useEffect, useState } from "react";
 import moment from "moment";
-import Header from "./Header";
+
+function messageTimestamp(msg) {
+  const raw = msg?.createdAt ?? msg?.dateTime;
+  if (raw == null || raw === "") return null;
+  if (typeof raw === "object" && raw !== null && "$date" in raw) {
+    return raw.$date;
+  }
+  return raw;
+}
+
+/** Clear relative labels (e.g. "1 minute ago", "2 hours ago") instead of vague "a few seconds ago". */
+function formatMessageTime(dateInput) {
+  if (dateInput == null || dateInput === "") return "";
+  const then = moment(dateInput);
+  if (!then.isValid()) return "";
+  const now = moment();
+  const sec = Math.max(0, now.diff(then, "seconds"));
+  const min = now.diff(then, "minutes");
+  const hrs = now.diff(then, "hours");
+  const days = now.diff(then, "days");
+
+  if (sec < 10) return "Just now";
+  if (sec < 60) return `${sec} second${sec === 1 ? "" : "s"} ago`;
+  if (min < 60) return `${min} minute${min === 1 ? "" : "s"} ago`;
+  if (hrs < 24) return `${hrs} hour${hrs === 1 ? "" : "s"} ago`;
+  if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
+  return then.format("MMM D, YYYY [at] h:mm A");
+}
 
 async function copyToClipboard(text) {
   try {
@@ -63,10 +90,18 @@ const MessageList = forwardRef(
   ({ messages, feedback, apiBase, onDeleteMessage }, ref) => {
     const bottomRef = useRef(null);
     const [copiedId, setCopiedId] = useState(null);
+    const [timeTick, setTimeTick] = useState(0);
+
+    useEffect(() => {
+      const id = window.setInterval(() => setTimeTick((t) => t + 1), 45_000);
+      return () => window.clearInterval(id);
+    }, []);
 
     useEffect(() => {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, feedback]);
+
+    void timeTick;
 
     const buildCopyText = (msg) => {
       const rawId = msg.document?._id ?? msg.documentId;
@@ -167,8 +202,12 @@ return (
               )}
 
               {/* Meta Info */}
-              <div className="text-[10px] mt-1 opacity-70">
-                {msg.name} • {moment(msg.dateTime).fromNow()}
+              <div
+                className={`mt-1 text-[10px] ${
+                  msg.isOwn ? "text-white/80" : "text-slate-500"
+                }`}
+              >
+                {msg.name} • {formatMessageTime(messageTimestamp(msg))}
               </div>
             </div>
 

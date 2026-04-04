@@ -126,15 +126,20 @@ let socketsConnected = new Set();
 /** Fallback map for legacy paths; presence uses Socket.IO rooms + socket.data.displayName */
 const users = {};
 
-/** Broadcast everyone actually in the Socket.IO room (source of truth). */
+/**
+ * Broadcast sockets that are in the room AND have the browser tab visible
+ * (see client `tab-visibility`). Not the same as "once joined" — hidden tabs drop off.
+ */
 async function emitRoomUsers(room) {
   const clean = String(room || "").trim().toLowerCase();
   if (!clean) return;
   try {
     const sockets = await io.in(clean).fetchSockets();
-    const roomUsers = sockets.map((s) => ({
-      name: s.data.displayName || "Anonymous",
-    }));
+    const roomUsers = sockets
+      .map((s) => ({
+        name: s.data.displayName || "Anonymous",
+        tabId: String(s.id).slice(-4),
+      }));
     io.to(clean).emit("active-users", roomUsers);
   } catch (err) {
     console.log("emitRoomUsers:", err);
@@ -154,6 +159,7 @@ io.on("connection", (socket) => {
     socketsConnected.delete(socket.id);
     delete users[socket.id];
     delete socket.data.displayName;
+    delete socket.data.tabFocused;
 
     io.emit("clients-total", socketsConnected.size);
 
@@ -169,9 +175,17 @@ io.on("connection", (socket) => {
     socket.leave(cleanPass);
     delete users[socket.id];
     delete socket.data.displayName;
+    delete socket.data.tabFocused;
 
     await emitRoomUsers(cleanPass);
   });
+
+  // socket.on("tab-visibility", async ({ password, visible }) => {
+  //   const cleanPass = password?.trim().toLowerCase();
+  //   if (!cleanPass || !socket.rooms.has(cleanPass)) return;
+  //   socket.data.tabFocused = visible !== false;
+  //   await emitRoomUsers(cleanPass);
+  // });
 
   socket.on("request-active-users", async ({ password }) => {
     const cleanPass = password?.trim().toLowerCase();
@@ -202,51 +216,120 @@ io.on("connection", (socket) => {
     }
   });
 
+  // socket.on("join-room", async ({ password, name }) => {
+  //   try {
+  //     if (!password) return;
+  //     const cleanPass = password.trim().toLowerCase();
+  //     const room = await Room.findOne({ password: cleanPass });
+  //     if (!room) {
+  //       socket.emit(
+  //         "error-message",
+  //         "No room matches this password. Check the password or create a new room."
+  //       );
+  //       return;
+  //     }
+
+  //     const displayName = name?.trim() || "Anonymous";
+  //     socket.data.displayName = displayName;
+  //     socket.data.tabFocused = true;
+  //     users[socket.id] = { name: displayName, room: cleanPass };
+
+  //     for (const r of [...socket.rooms]) {
+  //       if (r !== socket.id) socket.leave(r);
+  //     }
+
+  //     socket.join(cleanPass);
+  //     await emitRoomUsers(cleanPass);
+  //     const messagesRaw = await Message.find({ roomId: cleanPass })
+  //       .sort({ createdAt: 1 })
+  //       .populate("documentId", "fileName mimeType fileSize")
+  //       .lean();
+  //     const messages = messagesRaw.map((m) => ({
+  //       ...m,
+  //       document: m.documentId
+  //         ? {
+  //             _id: m.documentId._id,
+  //             fileName: m.documentId.fileName,
+  //             mimeType: m.documentId.mimeType,
+  //             fileSize: m.documentId.fileSize,
+  //           }
+  //         : null,
+  //     }));
+  //     // Single payload so the client can apply history after Chat mounts (avoids race with previous-messages).
+  //     socket.emit("room-joined", { roomId: cleanPass, messages });
+  //   } catch (err) {
+  //     console.log("Join Room Error:", err);
+  //     socket.emit("error-message", "Server error: " + err.message);
+  //   }
+  // });
+
   socket.on("join-room", async ({ password, name }) => {
-    try {
-      if (!password) return;
-      const cleanPass = password.trim().toLowerCase();
-      const room = await Room.findOne({ password: cleanPass });
-      if (!room) {
-        socket.emit(
-          "error-message",
-          "No room matches this password. Check the password or create a new room."
-        );
-        return;
-      }
-
-      const displayName = name?.trim() || "Anonymous";
-      socket.data.displayName = displayName;
-      users[socket.id] = { name: displayName, room: cleanPass };
-
-      for (const r of [...socket.rooms]) {
-        if (r !== socket.id) socket.leave(r);
-      }
-
-      socket.join(cleanPass);
-      await emitRoomUsers(cleanPass);
-      const messagesRaw = await Message.find({ roomId: cleanPass })
-        .sort({ dateTime: 1 })
-        .populate("documentId", "fileName mimeType fileSize")
-        .lean();
-      const messages = messagesRaw.map((m) => ({
-        ...m,
-        document: m.documentId
-          ? {
-              _id: m.documentId._id,
-              fileName: m.documentId.fileName,
-              mimeType: m.documentId.mimeType,
-              fileSize: m.documentId.fileSize,
-            }
-          : null,
-      }));
-      // Single payload so the client can apply history after Chat mounts (avoids race with previous-messages).
-      socket.emit("room-joined", { roomId: cleanPass, messages });
-    } catch (err) {
-      console.log("Join Room Error:", err);
-      socket.emit("error-message", "Server error: " + err.message);
+  try {
+    if (!password) return;
+    const cleanPass = password.trim().toLowerCase();
+    const room = await Room.findOne({ password: cleanPass });
+    if (!room) {
+      socket.emit("error-message", "No room matches this password. Check the password or create a new room.");
+      return;
     }
-  });
+
+    const displayName = name?.trim() || "Anonymous";
+    socket.data.displayName = displayName;
+    socket.data.tabFocused = true;
+    users[socket.id] = { name: displayName, room: cleanPass };
+
+    for (const r of [...socket.rooms]) {
+      if (r !== socket.id) socket.leave(r);
+    }
+
+    socket.join(cleanPass);
+    await emitRoomUsers(cleanPass);
+
+    // ✅ Find stale messages from a previous room with the same password
+    const staleMsgs = await Message.find({
+      roomId: cleanPass,
+      createdAt: { $lt: room.createdAt },
+    }).lean();
+
+    // ✅ Delete their documents first
+    const staleDocIds = staleMsgs
+      .filter((m) => m.documentId)
+      .map((m) => m.documentId);
+
+    if (staleDocIds.length > 0) {
+      await Document.deleteMany({ _id: { $in: staleDocIds } });
+    }
+
+    // ✅ Then delete the stale messages
+    await Message.deleteMany({
+      roomId: cleanPass,
+      createdAt: { $lt: room.createdAt },
+    });
+
+    // Now fetch only messages that belong to THIS room
+    const messagesRaw = await Message.find({ roomId: cleanPass })
+      .sort({ createdAt: 1 })
+      .populate("documentId", "fileName mimeType fileSize")
+      .lean();
+
+    const messages = messagesRaw.map((m) => ({
+      ...m,
+      document: m.documentId
+        ? {
+            _id: m.documentId._id,
+            fileName: m.documentId.fileName,
+            mimeType: m.documentId.mimeType,
+            fileSize: m.documentId.fileSize,
+          }
+        : null,
+    }));
+
+    socket.emit("room-joined", { roomId: cleanPass, messages });
+  } catch (err) {
+    console.log("Join Room Error:", err);
+    socket.emit("error-message", "Server error: " + err.message);
+  }
+});
 
   socket.on("message", async ({ password, message }) => {
     try {

@@ -54,16 +54,24 @@ export default function App() {
     const saved = loadSession();
     if (!saved) return;
 
-    function onErr() {
+    const join = () => {
+      socket.emit("join-room", { password: saved.room, name: saved.name });
+    };
+
+    function teardownListeners() {
+      socket.off("connect", join);
       socket.off("room-joined", onJoined);
       socket.off("error-message", onErr);
+    }
+
+    function onErr() {
+      teardownListeners();
       clearSession();
       setRestoring(false);
     }
 
     function onJoined(payload) {
-      socket.off("room-joined", onJoined);
-      socket.off("error-message", onErr);
+      teardownListeners();
       const { roomId, messages } = parseRoomJoined(payload);
       setName(saved.name);
       setRoom(roomId);
@@ -74,23 +82,12 @@ export default function App() {
 
     socket.on("room-joined", onJoined);
     socket.on("error-message", onErr);
-
-    const join = () => {
-      socket.emit("join-room", { password: saved.room, name: saved.name });
-    };
-
-    const onSocketConnect = () => {
-      socket.off("connect", onSocketConnect);
-      join();
-    };
+    socket.on("connect", join);
 
     if (socket.connected) join();
-    else socket.on("connect", onSocketConnect);
 
     return () => {
-      socket.off("connect", onSocketConnect);
-      socket.off("room-joined", onJoined);
-      socket.off("error-message", onErr);
+      teardownListeners();
     };
   }, []);
 

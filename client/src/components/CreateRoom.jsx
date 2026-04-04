@@ -22,9 +22,19 @@ export default function CreateRoom({ onRoomJoined, onBack }) {
     socket.off("error-message");
 
     const onCreated = (roomId) => {
+      socket.off("error-message", onErr);
       setStatus("Joining room...");
+
+      const onJoinErr = (msg) => {
+        socket.off("error-message", onJoinErr);
+        setError(msg || "Could not join the room");
+        setStatus("");
+      };
+
+      socket.once("error-message", onJoinErr);
       socket.emit("join-room", { password: roomId, name: displayName });
       socket.once("room-joined", (payload) => {
+        socket.off("error-message", onJoinErr);
         const { roomId: id, messages } = parseRoomJoined(payload);
         onRoomJoined({ roomId: id, messages, name: displayName });
       });

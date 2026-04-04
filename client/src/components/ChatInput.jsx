@@ -6,6 +6,7 @@ export default function ChatInput({
   name,
   room,
   apiBase,
+  disabled = false,
 }) {
   const [input, setInput] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -13,6 +14,7 @@ export default function ChatInput({
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (disabled) return;
     if (!input.trim()) return;
     sendMessage(input.replace(/\r\n/g, "\n"));
     setInput("");
@@ -22,6 +24,7 @@ export default function ChatInput({
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
+      if (disabled) return;
       if (!input.trim()) return;
       sendMessage(input.replace(/\r\n/g, "\n"));
       setInput("");
@@ -32,7 +35,7 @@ export default function ChatInput({
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = "";
-    if (!file || !room) return;
+    if (disabled || !file || !room) return;
 
     setUploading(true);
     sendFeedback("");
@@ -64,28 +67,33 @@ return (
     {/* Message Form */}
     <form
       onSubmit={handleSubmit}
-      className="flex items-end gap-2 bg-white border border-gray-200 rounded-xl p-2 shadow-sm"
+      className={`flex items-end gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm ${disabled ? "opacity-60" : ""}`}
     >
       <textarea
         value={input}
         rows={3}
+        disabled={disabled}
         onChange={(e) => setInput(e.target.value)}
-        onFocus={() => sendFeedback(`${name} is typing a message`)}
+        onFocus={() => !disabled && sendFeedback(`${name} is typing a message`)}
         onKeyDown={(e) => {
-          sendFeedback(`✍ ${name} is typing a message`);
+          if (!disabled) sendFeedback(`✍ ${name} is typing a message`);
           handleKeyDown(e);
         }}
         onBlur={() => sendFeedback("")}
-        placeholder="Message or paste code — Ctrl+Enter to send"
-        className="flex-1 resize-none border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-black"
+        placeholder={
+          disabled
+            ? "Waiting for connection…"
+            : "Message or paste code — Ctrl+Enter to send"
+        }
+        className="flex-1 resize-none rounded-lg border border-gray-300 p-2 text-sm focus:outline-none focus:border-black disabled:cursor-not-allowed disabled:bg-slate-50"
       />
 
       <button
         type="submit"
-        disabled={uploading}
-        className="bg-black text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-800 transition disabled:opacity-50"
+        disabled={uploading || disabled}
+        className="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white transition hover:bg-slate-800 disabled:opacity-50"
       >
-        ➤
+        Send
       </button>
     </form>
 
@@ -97,13 +105,13 @@ return (
         id="chat-file"
         accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.gif,.webp"
         onChange={handleFileChange}
-        disabled={uploading}
+        disabled={uploading || disabled}
         className="hidden"
       />
 
       <label
         htmlFor="chat-file"
-        className="block text-center text-sm text-gray-600 border border-dashed border-gray-300 rounded-lg p-2 cursor-pointer hover:bg-gray-50"
+        className={`block rounded-lg border border-dashed border-gray-300 p-2 text-center text-sm text-gray-600 ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-gray-50"}`}
       >
         {uploading
           ? "Uploading…"
