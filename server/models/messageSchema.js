@@ -15,6 +15,6 @@ const messageSchema = new mongoose.Schema({
 });
 
 // TTL index: delete messages 1 hour (3600 seconds) after creation
-messageSchema.index({ createdAt: 1 }, { expireAfterSeconds: 1800 });
+messageSchema.index({ createdAt: 1 }, { expireAfterSeconds: 3600 });
 
 module.exports = mongoose.model("Message", messageSchema);
