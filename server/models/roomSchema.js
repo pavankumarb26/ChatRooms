@@ -6,6 +6,6 @@ const roomSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-roomSchema.index({ createdAt: 1 }, { expireAfterSeconds: 1800 });
+roomSchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 });
 
 module.exports = mongoose.model("Room", roomSchema);
