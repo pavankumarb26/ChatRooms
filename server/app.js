@@ -37,7 +37,7 @@ function handleMulterUpload(req, res, next) {
 
 const app = express();
 
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cors({ origin: "chatrooms-production-4802.up.railway.app", credentials: true }));
 app.use(express.json());
 
 const server = app.listen(process.env.PORT || 3000, () => {
