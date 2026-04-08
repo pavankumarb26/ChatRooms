@@ -53,12 +53,8 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use((req, res, next) => {
-  if (req.method === "OPTIONS") {
-    return cors(corsOptions)(req, res, next);
-  }
-  return next();
-});
+app.options("*", cors(corsOptions)); // ✅ properly responds to ALL preflight requests
+app.use(express.json());
 app.use(express.json());
 
 const server = app.listen(process.env.PORT || 3000, () => {
