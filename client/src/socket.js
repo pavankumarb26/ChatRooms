@@ -8,7 +8,7 @@ const socket = io(SOCKET_ORIGIN, {
   reconnectionDelay: 800,
   reconnectionDelayMax: 10_000,
   timeout: 20_000,
-  transports: ["websocket", "polling"],
+  transports: ["polling", "websocket"], // ✅ only this line changes
 });
 
 /** Server sends { roomId, messages }; older clients may receive a string room id only. */
