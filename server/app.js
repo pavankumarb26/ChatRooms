@@ -53,13 +53,11 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("/(.*)", cors(corsOptions));// ✅ properly responds to ALL preflight requests
 app.use(express.json());
 
-const server = app.listen(process.env.PORT || 3000, () => {
+const server = app.listen(process.env.PORT || 3000, "0.0.0.0", () => {
   console.log("Server running...");
 });
-
 const io = require("socket.io")(server, {
   cors: {
     origin: [...allowedOrigins],
