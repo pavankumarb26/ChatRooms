@@ -3,6 +3,7 @@ import Home from "./pages/Home.jsx";
 import Chat from "./components/Chat.jsx";
 import AppLayout from "./components/AppLayout.jsx";
 import socket, { parseRoomJoined } from "./socket";
+import Hide from "./components/Hide.jsx"
 
 const SESSION_KEY = "chat_websocket_session";
 
@@ -93,6 +94,7 @@ export default function App() {
 
   return (
     <AppLayout>
+      <Hide/>
       {restoring ? (
         <div className="flex flex-1 flex-col items-center justify-center px-4 py-16">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-slate-800" />

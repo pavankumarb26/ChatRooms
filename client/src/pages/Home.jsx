@@ -2,6 +2,7 @@ import { useState } from "react";
 import CreateRoom from "../components/CreateRoom";
 import JoinRoom from "../components/JoinRoom";
 import { FiMessageCircle } from "react-icons/fi";
+import Hide from "../components/Hide"
 
 export default function Home({ onRoomJoined }) {
   const [page, setPage] = useState("");
@@ -31,6 +32,7 @@ return (
           Connect instantly with friends
         </p>
       </div>
+
 
       {/* Create Room Card */}
       <div
