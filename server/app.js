@@ -41,7 +41,7 @@ const defaultOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   "https://chat-rooms-seven-gold.vercel.app",
-  "https://chatrooms-production-4802.up.railway.app",
+  "https://chatrooms-1-o2kq.onrender.com",
 ];
 const envOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
