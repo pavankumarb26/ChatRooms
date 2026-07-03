@@ -86,6 +86,46 @@ function TrashIcon() {
   );
 }
 
+function renderFormattedMessage(message) {
+  if (typeof message !== "string") return message;
+
+  const parts = message.split(/(```[\s\S]*?```)/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith("```") && part.endsWith("```")) {
+      const match = part.match(/^```(\w*)\n?([\s\S]*?)```$/);
+      const language = match ? match[1] : "";
+      const code = match ? match[2] : part.slice(3, -3);
+
+      return (
+        <div key={index} className="my-2 overflow-x-auto rounded-lg border border-slate-700 bg-slate-900 text-slate-100 p-3 font-mono text-xs text-left max-w-full">
+          <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase font-sans border-b border-slate-800 pb-1.5 mb-1.5 select-none">
+            <span>{language || "code"}</span>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                copyToClipboard(code);
+              }}
+              className="hover:text-white transition-colors"
+            >
+              Copy
+            </button>
+          </div>
+          <pre className="whitespace-pre overflow-x-auto">
+            <code>{code}</code>
+          </pre>
+        </div>
+      );
+    }
+
+    return (
+      <span key={index} className="whitespace-pre-wrap">
+        {part}
+      </span>
+    );
+  });
+}
+
 const MessageList = forwardRef(
   ({ messages, feedback, apiBase, onDeleteMessage }, ref) => {
     const bottomRef = useRef(null);
@@ -178,9 +218,9 @@ return (
 
               {/* Text Message */}
               {!isFile && (
-                <span className="whitespace-pre-wrap">
-                  {msg.message}
-                </span>
+                <div className="whitespace-pre-wrap">
+                  {renderFormattedMessage(msg.message)}
+                </div>
               )}
 
               {/* File Message */}
@@ -238,8 +278,17 @@ return (
 
     {/* Typing Feedback */}
     {feedback && (
-      <li className="text-center text-sm text-gray-500 italic">
-        {feedback}
+      <li className="flex justify-start px-2 py-1">
+        <div className="flex gap-2 max-w-[80%] items-center">
+          <div className="p-2.5 rounded-2xl bg-white text-slate-500 rounded-bl-none border shadow-sm text-xs flex items-center gap-2">
+            <span className="font-medium text-slate-600">{feedback}</span>
+            <div className="flex gap-1 items-center">
+              <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+            </div>
+          </div>
+        </div>
       </li>
     )}
 

@@ -12,7 +12,7 @@ connectDB();
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 25 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const ok = /\.(pdf|doc|docx|ppt|pptx|txt|png|jpe?g|gif|webp)$/i.test(
       file.originalname || ""
@@ -37,12 +37,16 @@ function handleMulterUpload(req, res, next) {
 
 const app = express();
 
-const allowedOrigins = new Set([
+const defaultOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   "https://chat-rooms-seven-gold.vercel.app",
   "https://chatrooms-production-4802.up.railway.app",
-]);
+];
+const envOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  : [];
+const allowedOrigins = new Set([...defaultOrigins, ...envOrigins]);
 
 const corsOptions = {
   origin(origin, cb) {
@@ -204,12 +208,7 @@ io.on("connection", (socket) => {
     await emitRoomUsers(cleanPass);
   });
 
-  // socket.on("tab-visibility", async ({ password, visible }) => {
-  //   const cleanPass = password?.trim().toLowerCase();
-  //   if (!cleanPass || !socket.rooms.has(cleanPass)) return;
-  //   socket.data.tabFocused = visible !== false;
-  //   await emitRoomUsers(cleanPass);
-  // });
+  // tab-visibility event commented out in legacy code
 
   socket.on("request-active-users", async ({ password }) => {
     const cleanPass = password?.trim().toLowerCase();
@@ -239,53 +238,6 @@ io.on("connection", (socket) => {
       socket.emit("error-message", "Server error: " + err.message);
     }
   });
-
-  // socket.on("join-room", async ({ password, name }) => {
-  //   try {
-  //     if (!password) return;
-  //     const cleanPass = password.trim().toLowerCase();
-  //     const room = await Room.findOne({ password: cleanPass });
-  //     if (!room) {
-  //       socket.emit(
-  //         "error-message",
-  //         "No room matches this password. Check the password or create a new room."
-  //       );
-  //       return;
-  //     }
-
-  //     const displayName = name?.trim() || "Anonymous";
-  //     socket.data.displayName = displayName;
-  //     socket.data.tabFocused = true;
-  //     users[socket.id] = { name: displayName, room: cleanPass };
-
-  //     for (const r of [...socket.rooms]) {
-  //       if (r !== socket.id) socket.leave(r);
-  //     }
-
-  //     socket.join(cleanPass);
-  //     await emitRoomUsers(cleanPass);
-  //     const messagesRaw = await Message.find({ roomId: cleanPass })
-  //       .sort({ createdAt: 1 })
-  //       .populate("documentId", "fileName mimeType fileSize")
-  //       .lean();
-  //     const messages = messagesRaw.map((m) => ({
-  //       ...m,
-  //       document: m.documentId
-  //         ? {
-  //             _id: m.documentId._id,
-  //             fileName: m.documentId.fileName,
-  //             mimeType: m.documentId.mimeType,
-  //             fileSize: m.documentId.fileSize,
-  //           }
-  //         : null,
-  //     }));
-  //     // Single payload so the client can apply history after Chat mounts (avoids race with previous-messages).
-  //     socket.emit("room-joined", { roomId: cleanPass, messages });
-  //   } catch (err) {
-  //     console.log("Join Room Error:", err);
-  //     socket.emit("error-message", "Server error: " + err.message);
-  //   }
-  // });
 
   socket.on("join-room", async ({ password, name }) => {
   try {

@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Message = require("../models/messageSchema");
 const Room = require("../models/roomSchema");
+const Document = require("../models/documentSchema");
 
 const connectDB = async () => {
   try {
@@ -25,6 +26,7 @@ const connectDB = async () => {
     // ✅ Force recreate TTL indexes from schema
     await Message.syncIndexes();
     await Room.syncIndexes();
+    await Document.syncIndexes();
     console.log("Indexes synced ✅");
 
   } catch (error) {

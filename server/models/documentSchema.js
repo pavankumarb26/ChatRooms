@@ -72,5 +72,6 @@ const documentSchema = new mongoose.Schema(
 
 documentSchema.index({ userId: 1, uploadDate: -1 });
 documentSchema.index({ roomId: 1, uploadDate: -1 });
+documentSchema.index({ uploadDate: 1 }, { expireAfterSeconds: 86400 });
 
 module.exports = mongoose.model("Document", documentSchema);

@@ -6,6 +6,25 @@ import MessageList from "./MessageList";
 import Header from "./Header";
 import ChatFooterBar from "./ChatFooterBar";
 
+const playNotificationSound = () => {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880.0, ctx.currentTime); // A5
+    osc.frequency.setValueAtTime(1046.5, ctx.currentTime + 0.08); // C6
+    gain.gain.setValueAtTime(0.04, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.25);
+  } catch (e) {
+    console.log("Audio notify blocked or failed:", e);
+  }
+};
+
 export default function Chat({ room, name, onLeave, initialMessages = [] }) {
   const [messages, setMessages] = useState(() =>
     initialMessages.map((m) => ({ ...m, isOwn: m.name === name }))
@@ -122,6 +141,9 @@ useEffect(() => {
         { ...data, isOwn: data.name === name },
       ]);
       setFeedback("");
+      if (data.name !== name) {
+        playNotificationSound();
+      }
     };
 
     const onFeedback = ({ feedback: fb }) => setFeedback(fb);

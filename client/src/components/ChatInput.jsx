@@ -10,6 +10,7 @@ export default function ChatInput({
 }) {
   const [input, setInput] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const fileRef = useRef(null);
 
   const handleSubmit = (e) => {
@@ -32,9 +33,7 @@ export default function ChatInput({
     }
   };
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
+  const uploadFile = async (file) => {
     if (disabled || !file || !room) return;
 
     setUploading(true);
@@ -65,8 +64,43 @@ export default function ChatInput({
     }
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (file) uploadFile(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    if (!disabled) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (disabled) return;
+    const file = e.dataTransfer.files?.[0];
+    if (file) uploadFile(file);
+  };
+
 return (
-  <div className="w-full max-w-full">
+  <div 
+    className="w-full max-w-full relative"
+    onDragOver={handleDragOver}
+    onDragLeave={handleDragLeave}
+    onDrop={handleDrop}
+  >
+    {isDragging && (
+      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-900 bg-slate-50/95 text-slate-950 backdrop-blur-sm pointer-events-none">
+        <span className="text-xl mb-1">📥</span>
+        <span className="text-xs font-semibold">Drop file to attach</span>
+      </div>
+    )}
 
     {/* Message Form */}
     <form
