@@ -14,14 +14,14 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    const ok = /\.(pdf|doc|docx|ppt|pptx|txt|png|jpe?g|gif|webp)$/i.test(
+    const ok = /\.(pdf|doc|docx|ppt|pptx|txt|png|jpe?g|gif|webp|webm|wav|mp3|ogg|m4a|zip|rar|7z|tar|gz)$/i.test(
       file.originalname || ""
     );
     if (ok) cb(null, true);
     else
       cb(
         new Error(
-          "Only images, PDF, Word, PowerPoint, and .txt files are allowed."
+          "Only images, PDF, Word, PowerPoint, audio, text, and zip/rar archives are allowed."
         )
       );
   },
@@ -338,6 +338,18 @@ io.on("connection", (socket) => {
       console.log("Message Error:", err);
       socket.emit("error-message", "Server error: " + err.message);
     }
+  });
+
+  socket.on("draw", ({ password, drawData }) => {
+    const cleanPass = password?.trim().toLowerCase();
+    if (!cleanPass) return;
+    socket.to(cleanPass).emit("draw", drawData);
+  });
+
+  socket.on("clear-canvas", ({ password }) => {
+    const cleanPass = password?.trim().toLowerCase();
+    if (!cleanPass) return;
+    socket.to(cleanPass).emit("clear-canvas");
   });
 
   socket.on("feedback", ({ password, feedback }) => {

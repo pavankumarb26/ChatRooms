@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoomChat - Technical Documentation & Interview Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;450;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --indigo-50: #eef2ff;
+      --indigo-100: #e0e7ff;
+      --indigo-600: #4f46e5;
+      --indigo-700: #4338ca;
+      --rose-50: #fff1f2;
+      --rose-600: #e11d48;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--slate-50);
+      color: var(--slate-800);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border: 1px border var(--slate-200);
+      border-radius: 24px;
+      padding: 3rem;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+    }
+
+    header {
+      border-bottom: 2px solid var(--slate-100);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--indigo-50);
+      border: 1px solid var(--indigo-100);
+      color: var(--indigo-600);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: var(--slate-900);
+      letter-spacing: -0.025em;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--slate-700);
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      border-left: 4px solid var(--indigo-600);
+      padding-left: 0.75rem;
+    }
+
+    h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--slate-900);
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    p {
+      margin-bottom: 1rem;
+    }
+
+    ul, ol {
+      margin-bottom: 1rem;
+      padding-left: 1.5rem;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      background-color: var(--slate-100);
+      padding: 0.125rem 0.35rem;
+      border-radius: 6px;
+      color: var(--rose-600);
+    }
+
+    pre {
+      background-color: var(--slate-900);
+      color: var(--slate-100);
+      padding: 1.25rem;
+      border-radius: 12px;
+      overflow-x: auto;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--slate-800);
+    }
+
+    pre code {
+      background-color: transparent;
+      padding: 0;
+      color: var(--slate-100);
+      font-size: 0.85rem;
+    }
+
+    .talk-track {
+      background-color: var(--indigo-50);
+      border: 1px solid var(--indigo-100);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .talk-track-title {
+      font-weight: 700;
+      color: var(--indigo-700);
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .talk-track-quote {
+      font-style: italic;
+      color: var(--slate-700);
+      border-left: 3px solid var(--indigo-600);
+      padding-left: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .print-btn {
+      display: block;
+      width: fit-content;
+      margin: 2rem auto 0 auto;
+      background: var(--indigo-600);
+      color: white;
+      border: none;
+      font-weight: 700;
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+      transition: background 0.15s ease;
+    }
+
+    .print-btn:hover {
+      background: var(--indigo-700);
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 1rem 0.5rem;
+      }
+      .container {
+        padding: 1.5rem;
+        border-radius: 16px;
+      }
+      h1 {
+        font-size: 1.75rem;
+      }
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      .container {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+      }
+      .print-btn {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <span class="badge">Interview Ready</span>
+      <h1>RoomChat Project Documentation</h1>
+      <p class="subtitle">System Architecture, Database Design, Sockets and Web API Guidelines</p>
+    </header>
+
+    <h2>1. Technical Overview & Stack</h2>
+    <p>RoomChat is an ephemeral, real-time workspace application designed to showcase full-stack development skills. It features zero user profiles, dynamic rooms, instant file sharing, and voice note recordings.</p>
+    <ul>
+      <li><strong>Frontend:</strong> React Single Page Application (SPA) structured using Vite, styling with custom light-theme Tailwind CSS configurations.</li>
+      <li><strong>Backend:</strong> Node.js and Express server handling file streaming, socket handshakes, and room sessions.</li>
+      <li><strong>Database:</strong> MongoDB Atlas instance for temporary message storage and binary file buffering.</li>
+      <li><strong>Real-time Comm:</strong> Socket.IO managing participant lists, typing broadcasts, and instant message feeds.</li>
+    </ul>
+
+    <h2>2. Schema Model & Automatic Cleanup (TTL)</h2>
+    <p>To eliminate data leaks, MongoDB collections employ Time-To-Live (TTL) indexes, automatically erasing documents 24 hours after creation.</p>
+    
+    <h3>A. Document Attachment Schema (<code>documentSchema.js</code>)</h3>
+    <pre><code>const documentSchema = new mongoose.Schema({
+  fileName: { type: String, required: true },
+  mimeType: { type: String, required: true },
+  data: { type: Buffer, required: true }, // Files saved directly as binary data
+  uploadDate: { type: Date, default: Date.now, index: { expires: 86400 } } // 24-Hour TTL
+});</code></pre>
+
+    <h3>B. Message Schema (<code>messageSchema.js</code>)</h3>
+    <pre><code>const messageSchema = new mongoose.Schema({
+  room: { type: String, required: true },
+  name: { type: String, required: true },
+  message: { type: String },
+  kind: { type: String, enum: ['text', 'file'], default: 'text' },
+  document: { type: mongoose.Schema.Types.ObjectId, ref: 'Document' },
+  createdAt: { type: Date, default: Date.now, index: { expires: 86400 } } // 24-Hour TTL
+});</code></pre>
+
+    <h2>3. Real-Time Socket Protocols</h2>
+    <p>RoomChat handles real-time coordination with a series of high-frequency Socket.IO events:</p>
+    <ul>
+      <li><code>join-room</code>: Client joins a password-protected room. The server assigns the socket to an Express channel (<code>socket.join(roomId)</code>) and shares chat history.</li>
+      <li><code>active-users</code>: Server broadcasts a list of online participants (<code>{ name, socketId, tabId }</code>) to the room header.</li>
+      <li><code>feedback</code>: Broadcasts active typing statuses (e.g., <i>"Jane is typing..."</i>) dynamically.</li>
+      <li><code>delete-message</code>: Instantly deletes message entities from the database and broadcasts the deletion event.</li>
+    </ul>
+
+    <h2>4. Advanced Custom Features</h2>
+    
+    <h3>A. Microphone Voice Notes Recorder</h3>
+    <p>Built using the native <code>MediaRecorder</code> API, this tool prompts users for microphone permissions, captures audio streams, packages the stream chunks into a <code>audio/webm</code> File object, and sends it to the REST server using a multipart form request.</p>
+
+    <h3>B. Custom Seekable Audio Player</h3>
+    <p>Rather than using basic browser players, the audio player utilizes React state management hooks to handle media play/pause triggers and input timelines for an integrated custom UI.</p>
+
+    <h3>C. Name-Hash Initial Avatars</h3>
+    <p>Dynamic user avatars are generated directly on the frontend by taking the user's name initial and running a hashing function to match their profile with a high-contrast Tailwind color class, ensuring visual identification without any database storage.</p>
+
+    <h2>5. Interview Talk Tracks & System Design Decisions</h2>
+    <p>Use these responses during technical reviews to explain architectural trade-offs:</p>
+
+    <div class="talk-track">
+      <div class="talk-track-title">Why use MongoDB for file storage instead of Amazon S3?</div>
+      <div class="talk-track-quote">
+        "Since RoomChat is an ephemeral workspace application where all room sessions expire after 24 hours, storing file uploads as binary buffer data inside MongoDB simplifies our cleanups. We set a 24-hour TTL index directly on the document collections. When a room session expires, the database drops both the text messages and the binary file chunks in a single operation, preventing orphaned files and database storage leaks."
+      </div>
+    </div>
+
+    <div class="talk-track">
+      <div class="talk-track-title">How did you handle the hover copy/delete buttons position?</div>
+      <div class="talk-track-quote">
+        "Initially, the floating actions (copy/delete) on right-aligned messages were positioned outside the bubble. However, the empty gap between the bubble and the actions caused the cursor to leave the container wrapper, immediately breaking the CSS hover state and closing the buttons before they could be clicked. I resolved this by adding left padding (<code>pl-14</code>) directly to the trigger container. This acts as an invisible bridge, keeping the mouse within the element boundary and ensuring a smooth click experience."
+      </div>
+    </div>
+
+    <div class="print-btn" onclick="window.print()">Print or Save as PDF</div>
+  </div>
+
+</body>
+</html>

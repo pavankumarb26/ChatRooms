@@ -52,47 +52,20 @@ export default function Chat({ room, name, onLeave, initialMessages = [] }) {
     };
   }, [room, name]);
 
-  // Add this useEffect in Chat.jsx
-useEffect(() => {
-  if (!room) return;
+  useEffect(() => {
+    if (!room) return;
 
-  const handleUnload = () => {
-    socket.emit("leave-room", { password: room });
-  };
+    const handleUnload = () => {
+      socket.emit("leave-room", { password: room });
+    };
 
-  window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("beforeunload", handleUnload);
 
-  return () => {
-    window.removeEventListener("beforeunload", handleUnload);
-    socket.emit("leave-room", { password: room }); // fires when component unmounts too
-  };
-}, [room]);
-
-
-  /** Report whether this browser tab is visible so "active" means room open + tab in foreground. */
-  // useEffect(() => {
-  //   if (!room) return;
-
-  //   const emit = (visible) => {
-  //     socket.emit("tab-visibility", { password: room, visible });
-  //   };
-
-  //   const onVis = () => emit(document.visibilityState === "visible");
-  //   const onPageHide = () => emit(false);
-  //   const onSocketConnect = () => emit(document.visibilityState === "visible");
-
-  //   emit(document.visibilityState === "visible");
-  //   document.addEventListener("visibilitychange", onVis);
-  //   window.addEventListener("pagehide", onPageHide);
-  //   socket.on("connect", onSocketConnect);
-
-  //   return () => {
-  //     document.removeEventListener("visibilitychange", onVis);
-  //     window.removeEventListener("pagehide", onPageHide);
-  //     socket.off("connect", onSocketConnect);
-  //     emit(false);
-  //   };
-  // }, [room]);
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+      socket.emit("leave-room", { password: room });
+    };
+  }, [room]);
 
   useEffect(() => {
     const onConnect = () => setConnection("connected");
@@ -185,7 +158,6 @@ useEffect(() => {
     };
   }, [name, room]);
 
-  /** After each successful connect while in chat, refresh presence list. */
   useEffect(() => {
     if (!room || connection !== "connected") return;
     socket.emit("request-active-users", { password: room });
@@ -214,7 +186,7 @@ useEffect(() => {
   return (
     <div className="flex min-h-0 flex-1 flex-col px-3 py-4 sm:px-4 lg:px-6">
       <div className="mx-auto flex w-full max-w-3xl min-h-0 flex-1 flex-col lg:max-w-4xl">
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xl shadow-slate-200/40 ring-1 ring-slate-200/60">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white/70 shadow-2xl shadow-slate-200/20 backdrop-blur-xl ring-1 ring-slate-200/40">
           <Header
             room={room}
             users={users}
@@ -224,7 +196,7 @@ useEffect(() => {
 
           {banner && (
             <div
-              className="border-b border-amber-200 bg-amber-50 px-3 py-2 text-center text-xs text-amber-900 sm:text-sm"
+              className="border-b border-amber-200 bg-amber-50/80 px-3 py-2 text-center text-xs text-amber-900 shadow-sm"
               role="status"
             >
               {banner}
@@ -232,19 +204,18 @@ useEffect(() => {
           )}
 
           {connection === "reconnecting" && (
-            <div className="border-b border-sky-200 bg-sky-50 px-3 py-2 text-center text-xs text-sky-900">
+            <div className="border-b border-sky-200 bg-sky-50/80 px-3 py-2 text-center text-xs text-sky-900 shadow-sm animate-pulse">
               Connection lost — reconnecting…
             </div>
           )}
 
           {connection === "disconnected" && (
-            <div className="border-b border-red-200 bg-red-50 px-3 py-2 text-center text-xs text-red-900">
-              Offline. Check the server and your network, then wait for an
-              automatic retry or refresh the page.
+            <div className="border-b border-rose-200 bg-rose-50/80 px-3 py-2 text-center text-xs text-rose-900 shadow-sm animate-pulse">
+              Offline. Check server connection.
             </div>
           )}
 
-          <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50/90">
+          <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50/30">
             <div className="mx-auto max-w-full px-2 py-3 sm:px-4">
               <MessageList
                 messages={messages}
@@ -255,8 +226,8 @@ useEffect(() => {
             </div>
           </div>
 
-          <div className="shrink-0 border-t border-slate-200 bg-white">
-            <div className="p-3 sm:p-4">
+          <div className="shrink-0 border-t border-slate-200/80 bg-white/50 backdrop-blur-md">
+            <div className="p-3 sm:p-4 bg-white/10">
               <ChatInput
                 sendMessage={sendMessage}
                 sendFeedback={sendFeedback}
